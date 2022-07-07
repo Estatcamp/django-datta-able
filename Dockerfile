@@ -1,4 +1,4 @@
-FROM python:3.9
+FROM estat/python
 
 # set environment variables
 ENV PYTHONDONTWRITEBYTECODE 1
