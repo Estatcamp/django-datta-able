@@ -1,28 +1,41 @@
 version: '3.8'
+
 services:
   appseed-app:
-    container_name: appseed_app
-    restart: always
-    env_file: .env
     build: .
+    container_name: appseed_app
+    restart: on-failure
+    environment:
+      - DEBUG=True
+      - SERVER=.docker.localhost
+      - ASSETS_ROOT=/static/assets
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.shiny.tls=true"
+      - "traefik.http.routers.shiny.rule=Host(`demo.docker.localhost`)"
+      - "estatcamp.url=https://demo.docker.localhost"
     networks:
-      - db_network
-      - web_network
-  nginx:
-    container_name: nginx
-    restart: always
-    image: "nginx:latest"
+      - proxy
+
+  reverse-proxy:
+    image: traefik:v2.3
+    security_opt:
+      - no-new-privileges:true
     ports:
-      - "5085:5085"
+      - "80:80"
+      - "443:443"
+      - "8080:8080"
     volumes:
-      - ./nginx:/etc/nginx/conf.d
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ${HOME}/.certs:/etc/certs:ro
+      - ${HOME}/.traefik/traefik.yml:/etc/traefik/traefik.yml:ro
+      - ${HOME}/.traefik/config.yml:/etc/traefik/config.yml:ro
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.traefik=true"
     networks:
-      - web_network
-    depends_on: 
-      - appseed-app
+      - proxy
+
 networks:
-  db_network:
-    driver: bridge
-  web_network:
-    driver: bridge
- 
+  proxy:
+    external: true
