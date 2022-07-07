@@ -1,1 +1,7 @@
 template: Python
+
+objectives:
+  base:
+    inheritsFrom: Python
+    run:
+      docker-compose: true
